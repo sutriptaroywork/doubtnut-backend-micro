@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=800px, initial-scale=1, shrink-to-fit=no">
+  <title>Invoice</title>
+
+  <style>
+    body {
+      color:#444444;
+      margin: 0;
+    }
+    #invoice {
+      padding: 0 3vw;
+      /*max-width: 400px;*/
+      /*min-height: 2400px; */
+      min-height: 99vh;
+      margin: 0 auto;
+      border: 0.5vh solid #ea542a;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      font-size: 1.9vw;
+      font-family: sans-serif;
+    }
+    .header-inner {
+      display: flex;
+      justify-content: space-between;
+    }
+    .invoice-head {
+      font-size: 3.5vw;
+      text-align: center;
+    }
+    .divider {
+      width: 5vw;
+      text-align: center;
+    }
+    .amount-divider {
+      width: 10%;
+      text-align: center;
+    }
+    .left-text {
+      width: 24vw;
+      padding-left: 2vw;
+    }
+    .right-text {
+      width: 50vw;
+      padding-left: 3vw;
+    }
+    .amount-left-text {
+      width: 45%;
+      text-align: right;
+    }
+    .amount-right-text {
+      width: 45%;
+    }
+    .capitalize {
+      text-transform: capitalize;
+    }
+    .uppercase {
+      text-transform: uppercase;
+    }
+    .comp-info {
+      font-style: italic;
+      font-size: 1.2vw;
+      margin: 0;
+      text-align: right;
+    }
+    .refund-info {
+      font-style: italic;
+      font-size: 1.4vw;
+      margin: 0;
+      text-align: left;
+    }
+    .amount-info-wrap {
+      font-size: 1.9vw;
+      display: flex;
+      justify-content: flex-end;
+    }
+    .amount-info {
+      width: 85%;
+      background: #efefef;
+      padding: 3%;
+      margin-top: 2vh;
+    }
+    .amount-info > div {
+      display: flex;
+      align-items: center;
+      margin-bottom: 0.7vh;
+    }
+    .invoice-info {
+      background: #f0f0f0;
+      display: flex;
+      margin-bottom: 2vh;
+      padding: 0.4vh 0;
+    }
+    .invoice {
+      position: relative;
+      background-color: #FFF;
+      padding: 15px;
+    }
+    .invoice .company-details {
+      text-align: right;
+    }
+    .invoice .company-details div {
+      margin-top: 0.6vh;
+    }
+    .invoice .company-details .name {
+      margin-top: 0;
+      margin-bottom: 0;
+      font-size: 2.9vw;
+    }
+    header {
+      padding: 10px 0;
+      margin-bottom: 20px;
+      border-bottom: 1px solid #ea5429;
+    }
+  </style>
+</head>
+
+<body>
+<div id="invoice">
+  <div class="invoice">
+
+    <header>
+      <div class="header-inner">
+        <div style="width: 15vw;">
+          <img src="https://res-1.cloudinary.com/crunchbase-production/image/upload/c_lpad,f_auto,q_auto:eco/qzseocpuhrlgd39wsx6u" style="width: 100%;" alt="doubtnut-logo" data-holder-rendered="true">
+        </div>
+        <div class="company-details">
+          <h4 class="name">CLASS 21A TECHNOLOGIES PRIVATE LIMITED</h4>
+          <div>1st FLOOR, UNITECH TRADE CENTER, SUSHANT LOK PHASE 1</div>
+          <div>SECTOR 43, GURGAON, Haryana, 122009</div>
+          <div><strong>GSTIN No: 06AAGCC5347M1ZD</strong></div>
+        </div>
+      </div>
+
+      <div class="header-inner" style="margin-top: 4vh;">
+        <div>Invoice No: <strong>DN/##INVOICE_NO##</strong></div>
+        <div>Date: <strong>##DATE2##</strong></div>
+      </div>
+    </header>
+
+    <h3 class="invoice-head">INVOICE</h3>
+
+    <div class="invoice-info">
+      <div class="left-text">Student ID</div>
+      <div class="divider">:</div>
+      <div class="right-text">##ST_ID##</div>
+    </div>
+    <div class="invoice-info">
+      <div class="left-text">Bill To</div>
+      <div class="divider">:</div>
+      <div class="right-text">##MOBILE##</div>
+    </div>
+    <div class="invoice-info">
+      <div class="left-text">Place of Supply:</div>
+      <div class="divider">:</div>
+      <div class="right-text">ONLINE SERVICE</div>
+    </div>
+    <div class="invoice-info">
+      <div class="left-text">Description of Services:</div>
+      <div class="divider">:</div>
+      <div class="right-text uppercase">##PACKAGE_NAME## [##STARTDATE## to ##ENDDATE##]</div>
+    </div>
+    <div class="invoice-info">
+      <div class="left-text">SAC Code:</div>
+      <div class="divider">:</div>
+      <div class="right-text">999259</div>
+    </div>
+    <div class="invoice-info">
+      <div class="left-text">Payment Mode:</div>
+      <div class="divider">:</div>
+      <div class="right-text">##PAYMENT_MODE##</div>
+    </div>
+
+    <div class="amount-info-wrap">
+      <div class="amount-info">
+        <div>
+          <div class="amount-left-text">TOTAL AMOUNT</div>
+          <div class="amount-divider">:</div>
+          <div class="amount-right-text">₹##TOTAL_AMOUNT##</div>
+        </div>
+        <div id="coupon-discount">
+          <div class="amount-left-text">COUPON DISCOUNT (##COUPON_CODE##)</div>
+          <div class="amount-divider">:</div>
+          <div class="amount-right-text">-₹##COUPON_DISCOUNT##</div>
+        </div>
+        <div id="wallet-discount">
+          <div class="amount-left-text">WALLET DISCOUNT (REWARD)</div>
+          <div class="amount-divider">:</div>
+          <div class="amount-right-text">-₹##WALLET_DISCOUNT##</div>
+        </div>
+        <div>
+          <div class="amount-left-text">AMOUNT PAID(incl. Taxes)</div>
+          <div class="amount-divider">:</div>
+          <div class="amount-right-text">₹##AMOUNT_PAID##</div>
+        </div>
+        <div>
+          <div class="amount-left-text">SELLING PRICE</div>
+          <div class="amount-divider">:</div>
+          <div class="amount-right-text">₹##SELLING_PRICE##</div>
+        </div>
+        <div>
+          <div class="amount-left-text"> IGST @ 18%</div>
+          <div class="amount-divider">:</div>
+          <div class="amount-right-text">₹##IGST##</div>
+        </div>
+        <div style="margin-bottom: 0">
+          <div class="amount-left-text">TOTAL AMOUNT PAID IN WORDS</div>
+          <div class="amount-divider">:</div>
+          <div class="amount-right-text capitalize">##AMOUNT_PAID_WORDS##</div>
+        </div>
+      </div>
+    </div>
+    <br>
+    <p class="refund-info">NOTE:</p>
+    <p class="refund-info">Courses purchased cannot be refunded.</p>
+    <p class="refund-info">We provide a 7-day window from the date of purchase within which the user can switch courses.</p>
+    <p class="refund-info">By making this purchase, you have accepted our <a href = "https://www.doubtnut.com/terms-and-conditions" style = "color: #f0542c">Terms and Conditions</a></p>
+    <p class="comp-info">This is a computer generated invoice. Does not require any signature.</p>
+  </div>
+</div>
+</body>
+</html>

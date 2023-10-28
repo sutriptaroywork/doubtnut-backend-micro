@@ -1,0 +1,118 @@
+import { ServiceSchema, Context } from "moleculer";
+import DbService from "dn-moleculer-db";
+import Sequelize from "sequelize";
+import { adapter } from "../config";
+import { OcrResponse, StringDiffResponse } from "../../question/services/question.interface";
+
+const modelAttributes: Sequelize.ModelAttributes = {
+    id: { type: Sequelize.UUID, primaryKey: true, defaultValue: Sequelize.UUIDV4 },
+    studentId: { type: Sequelize.STRING(32), allowNull: false },
+    class: { type: Sequelize.TINYINT },
+    // Subject: { type: Sequelize.TINYINT, references: { model: "subjects", key: "id" } },		// To find using Deep Learning, to be added later
+    question: { type: Sequelize.STRING(512) },
+    ocr: { type: Sequelize.TEXT({ length: "long" }) },					// Null if ocr fails, "" if OCR done but no ocr is empty string
+    ocrCleaned: { type: Sequelize.TEXT({ length: "long" }) },
+    ocrVersion: { type: Sequelize.ENUM("MP", "GV", "TS") },				// Mathpix, vision, teserract
+    locale: { type: Sequelize.STRING(5) },
+    searchVersion: { type: Sequelize.STRING(10) },
+    isTrial: { type: Sequelize.BOOLEAN, defaultValue: false },			// Need to find a better column name
+};
+
+const QuestionService: ServiceSchema = {
+    name: "$whatsapp-question",
+    mixins: [DbService],
+    adapter,
+    model: {
+        name: "QuestionAsk",
+        define: modelAttributes,
+        options: {
+            paranoid: true,
+            underscored: true,
+            freezeTableName: true,
+        },
+    },
+    settings: {
+    },
+    dependencies: [],
+    actions: {
+        getStringDiff: {
+            visibility: "protected",
+            async handler(ctx: Context<{ url: string }, { user: any }>) {
+                const variantAttachment: any = await ctx.call("$question.getFlagrResponse");
+                this.logger.info("VariantAttachment", variantAttachment);
+                const ocrData: OcrResponse = await ctx.call("$ocr.get", { url: ctx.params.url, variantAttachment });
+                if (!ocrData.ocr) {
+                    this.logger.error(ctx.params.url, "Null OCR");
+                    throw new Error("Null OCR");
+                }
+                const translatedText = await ctx.call("$translate.to", { text: ocrData.ocr });
+                this.logger.info("Translated text", translatedText);
+                const stringDiff: StringDiffResponse = await ctx.call("$question.getStringDiff", { variantAttachment, ocrData, text: translatedText });
+                this.logger.info("StringDiff", stringDiff.question.length);
+                const question = {
+                    studentId: ctx.meta.user.id,
+                    class: ctx.meta.user.class,
+                    question: ctx.params.url,
+                    ocr: ocrData.ocr,
+                    ocrCleaned: ocrData.ocr,
+                    ocrVersion: ocrData.source,
+                    locale: ocrData.locale,
+                    searchVersion: variantAttachment.version,
+                };
+                ctx.call("$whatsapp-question.create", question);
+                return stringDiff;
+            },
+            async fallback(ctx: Context<{ url: string }, { user: { id: number; class: number } }>) {
+                // TODO manage stringDiff fail too
+                this.logger.warn("Fallback-creating question");
+                const question = {
+                    studentId: ctx.meta.user.id,
+                    class: ctx.meta.user.class,
+                    question: ctx.params.url,
+                };
+                ctx.call("$whatsapp-question.create", question);
+            },
+        },
+        addQuestion: {
+            handler(ctx: Context<{ studentId: string; studentClass: number; fingerprint: string }>) {
+                const obj = {
+                    student_id: ctx.params.studentId,
+                    class: ctx.params.studentClass,
+                    subject: "MATHS",
+                    book: "MATHS",
+                    chapter: "DEFAULT",
+                    question: "",
+                    doubt: ctx.params.fingerprint,
+                    locale: "en",
+                };
+                // TODO add question in whatsappdb as well
+                return ctx.call("$sync-question.create", obj);
+            },
+        },
+        updateQuestion: {
+            handler(ctx: Context<{ questionId: string; ocrData: OcrResponse; stringDiff: StringDiffResponse }>) {
+                const obj = {
+                    id: ctx.params.questionId,
+                    is_skipped: ctx.params.ocrData.imageConfidence || 0,
+                    ocr_done: ctx.params.ocrData.fileName ? 1 : 0,
+                    ocr_text: ctx.params.ocrData.ocr,
+                    locale: ctx.params.ocrData.locale,
+                    is_trial: ctx.params.ocrData.ocrType,
+                    question: ctx.params.stringDiff.version,
+                    question_image: ctx.params.ocrData.fileName,
+                    original_ocr_text: ctx.params.stringDiff.extras.queryOcrText,
+                    wrong_image: ctx.params.stringDiff.isIntegral,
+                    // subject: ctx.params.stringDiff.extras.subject,
+                };
+                // TODO add question in whatsappdb as well
+                return ctx.call("$sync-question.update", obj);
+            },
+        },
+    },
+    events: {
+    },
+    methods: {
+    },
+};
+
+export = QuestionService;

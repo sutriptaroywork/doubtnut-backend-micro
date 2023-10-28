@@ -1,0 +1,33 @@
+import { ServiceSchema } from "moleculer";
+import DbService from "dn-moleculer-db";
+import Sequelize from "sequelize";
+import { adapter } from "../config";
+
+const modelAttributes: Sequelize.ModelAttributes = {
+	id: { type: Sequelize.UUID, primaryKey: true, allowNull: false, defaultValue: Sequelize.UUIDV4 },
+	questionId: { type: Sequelize.UUID, allowNull: false, unique: true, references: { model: "QuestionAsk", key: "id" } },
+	parentId: { type: Sequelize.INTEGER, allowNull: false },
+};
+
+const QuestionService: ServiceSchema = {
+	name: "$question-match",
+	mixins: [DbService],
+	adapter,
+	model: {
+		name: "QuestionMatch",
+		define: modelAttributes,
+		options: {
+			paranoid: true,
+			underscored: true,
+			freezeTableName: true,
+		},
+	},
+	settings: {},
+	dependencies: [],
+	actions: {
+	},
+	events: {},
+	methods: {},
+};
+
+export = QuestionService;

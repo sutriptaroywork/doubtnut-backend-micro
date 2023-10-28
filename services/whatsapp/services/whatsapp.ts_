@@ -1,0 +1,70 @@
+import { ServiceSchema, Context } from "moleculer";
+import WhatsappTextService from "./whatsapp.text";
+import WhatsappImageService from "./whatsapp.image";
+
+const WhatsappService: ServiceSchema = {
+    name: "$whatsapp",
+    mixins: [WhatsappTextService, WhatsappImageService],
+    settings: {
+    },
+    dependencies: [],
+    actions: {
+        response: {
+            visibility: "protected",
+            async handler(ctx: Context<{ source: "gupshup" | "netcore"; phone: string; type: "text" | "image"; msg: string }, { user: any }>) {
+                // TODO call question service if ctx.params.type==image
+                return this.getReplyEvent(ctx.params.source, ctx.params.phone, ctx.params.msg);
+            },
+        },
+    },
+    events: {
+    },
+    methods: {
+        // handleMultiMsg(context: any) {
+        //     const lock = context && context.active && context.createdAt && ((moment().add("5:30").diff(moment(context.createdAt), "minutes")) < 5);
+        //     if (!student) {
+        //         if (!lock) {
+        //             netcoreBl.sendMsg(staticParams.config, event.from, whatsappData.askFailure, { event: { ...event[`${event.message_type.toLowerCase()}_type`], messageId: event.message_id }, context });
+        //         }
+        //         throw new Error('Unable to add user');
+        //     }
+        //     if (!handledType.includes(event.message_type)) {
+        //         if (!lock) {
+        //             netcoreBl.sendMsg(staticParams.config, event.from, whatsappData.unhandledMessageType, { event: { ...event[`${event.message_type.toLowerCase()}_type`], messageId: event.message_id }, context });
+        //         }
+        //         throw new Error(event.message_type);
+        //     }
+        // }
+        getReplyEvent(source: "gupshup" | "netcore", phone: string, msg: string) {
+            // Const contextType = msg.startsWith("#") ? this.settings.ContextType.CAMPAIGN : this.settings.contextType.RANDOM;
+            msg = msg.replace("#", "");
+            if (msg.toLowerCase().includes("getpdf")) {
+                const questionId = parseInt(msg.toLowerCase().replace("getpdf", ""), 10);
+                if (!questionId) {
+                    return this.settings.replyEvents.unhandledMessage;
+                }
+                this.broker.call("$sendPdf.schedule", {
+                    questionId,
+                    entityType: "whatsapp",
+                    notificationInfo: {
+                        fileName: questionId,
+                        campaign: "WHATSAPP_PDF_WEB",
+                        limit: 20,
+                        footerImage: this.settings.footerImage[source],
+                        phone,
+                        caption: questionId,
+                        ...this.settings.replyEvents.solnPdf,
+                        additionalMsg: {
+                            success: this.settings.replyEvents.pdfSuccess,
+                            failure: this.settings.replyEvents.pdfFailure,
+                        },
+                    },
+                    nextEvent: "sendMediaMsg",
+                    nextEventGroup: `$${source}`,
+                });
+            }
+        },
+    },
+};
+
+export = WhatsappService;
